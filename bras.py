@@ -18,11 +18,13 @@ def read_config(file_path):
         password = content[1]
     return username, password
 
-def connect(username, password):
-    hd = {"Content-type": "application/json","Accept": "application/json"}
+def connect(user_info):
+    username = user_info[0]
+    password = user_info[1]
+    headers = {"Content-type" : "application/json","Accept" : "application/json"}
     url = portal_path
     data = {'action' : 'login', 'username' : username,'password' : password}
-    response = requests.post(url, data=data, headers=hd)
+    response = requests.post(url, data=data, headers=headers)
     result = response.json()
     reply_code = result['reply_code']
     if reply_code == 101:
@@ -30,24 +32,27 @@ def connect(username, password):
     else:
         print 'connect failed:', result['reply_message']
 
-def bras_service_login(username, password):
-    hd = {"Content-type": "application/json","Accept": "application/json"}
+def bras_service_login(user_info):
+    username = user_info[0]
+    password = user_info[1]
+    headers = {"Content-type" : "application/json","Accept" : "application/json"}
     url = bras_path + '/login'
-    user_info = {'username':username,'password':password}
-    response = requests.post(url, params=user_info, headers=hd)
+    params = {'username' : username,'password' : password}
+    response = requests.post(url, params=params, headers=headers)
     result = response.json()
     reply_code = result['reply_code']
     if reply_code == 2010101:
-        print 'login successfully!'
+        print 'bras service login successfully.'
+        jsessionid = response.cookies._cookies['bras.nju.edu.cn']['/']['JSESSIONID'].value
+        return {'JSESSIONID' : jsessionid}
     else:
-        print 'login failed: ', result['reply_msg']
-    jsessionid = response.cookies._cookies['bras.nju.edu.cn']['/']['JSESSIONID'].value
-    return {'JSESSIONID' : jsessionid}
+        print 'bras service login failed: ', result['reply_msg']
+        return None
 
 def disconnect(uid, cookie):
-    hd = {"Content-type": "application/x-www-form-urlencoded","Accept": "application/json"}
+    hd = {"Content-type" : "application/x-www-form-urlencoded","Accept" : "application/json"}
     url = bras_path + '/disconnect'
-    params = {'id':uid}
+    params = {'id' : uid}
     response = requests.post(url, data=params, headers=hd, cookies=cookie)
     result = response.json()
     reply_code = result['reply_code']
@@ -57,20 +62,26 @@ def disconnect(uid, cookie):
         print 'disconnect failed: ', result['reply_msg']
 
 def get_online_info(cookie):
-    hd = {"Content-type": "application/json","Accept": "application/json"}
+    headers = {"Content-type" : "application/json","Accept" : "application/json"}
     url = bras_path + '/online'
-    response = requests.post(url, headers=hd, cookies=cookie)
+    response = requests.post(url, headers=headers, cookies=cookie)
     result = response.json()
     reply_code = result['reply_code']
     if reply_code == 2030101:
-        print 'online successfully!'
+        print 'get online info successfully.'
+        return result['results']['rows'][0]['id']
     else:
-        print 'online failed: ', result['reply_msg']
-    return result['results']['rows'][0]['id']
+        print 'get online info failed: ', result['reply_msg']
+        return None
 
 if __name__ == '__main__':
+    """force disconnect"""
     user_info = read_config('bras_config')
-    #connect(user_info[0], user_info[1])
-    cookie = bras_service_login(user_info[0], user_info[1])
-    uid = get_online_info(cookie)
-    disconnect(uid, cookie)
+    cookie = bras_service_login(user_info)
+    if cookie:
+        uid = get_online_info(cookie)
+        if uid:
+            disconnect(uid, cookie)
+    """connect
+    connect(user_info)
+    """
