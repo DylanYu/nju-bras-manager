@@ -1,5 +1,12 @@
+#! /usr/bin/env python
+"""API for network access management in Nanjing University"""
+
 import requests
 import json
+
+__author__ = "Dongliang Yu, Cunxin Jia"
+__license__ = "GPL"
+__status__ = "development"
 
 portal_path = "http://p.nju.edu.cn/portal/portal_io.do"
 bras_path = "http://bras.nju.edu.cn:8080/selfservice"
@@ -61,8 +68,9 @@ def get_online_info(cookie):
         print 'online failed: ', result['reply_msg']
     return result['results']['rows'][0]['id']
 
-user_info = read_config('bras_config')
-#connect(user_info[0], user_info[1])
-cookie = bras_service_login(user_info[0], user_info[1])
-uid = get_online_info(cookie)
-disconnect(uid, cookie)
+if __name__ == '__main__':
+    user_info = read_config('bras_config')
+    #connect(user_info[0], user_info[1])
+    cookie = bras_service_login(user_info[0], user_info[1])
+    uid = get_online_info(cookie)
+    disconnect(uid, cookie)
