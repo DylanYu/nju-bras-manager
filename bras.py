@@ -68,15 +68,19 @@ def get_online_info(cookie):
     result = response.json()
     reply_code = result['reply_code']
     if reply_code == 2030101:
-        print 'get online info successfully.'
+        #print 'get online info successfully.'
         return result['results']['rows'][0]['id']
     else:
-        print 'get online info failed: ', result['reply_msg']
+        #print 'get online info failed: ', result['reply_msg']
         return None
 
 if __name__ == '__main__':
     """force disconnect"""
-    user_info = read_config('bras_config')
+    import sys
+    import os
+    abspath = os.path.abspath(sys.argv[0])
+    config_path = os.path.dirname(abspath) + '/bras_config'
+    user_info = read_config(config_path)
     cookie = bras_service_login(user_info)
     if cookie:
         uid = get_online_info(cookie)
